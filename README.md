@@ -1,4 +1,4 @@
-# QQ文本改写助手 (QQMiaoAssistant)
+# QQMiao 2
 
 基于 Android **无障碍服务（Accessibility Service）** 的 QQ 文本改写 / 润色工具。
 
