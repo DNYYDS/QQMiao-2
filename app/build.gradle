@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+// 从本地 keystore.properties 读取签名信息（该文件已加入 .gitignore，不会提交）
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file("keystore.properties")
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
+android {
+    namespace 'com.maomao.dn'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.maomao.dn"
+        minSdk 23
+        targetSdk 34
+        versionCode 47
+        versionName "1.47"
+    }
+
+    // release 签名使用私有 keystore（避免公开 debug keystore 被伪造覆盖安装）
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // 本环境 R8 混淆会导致 APK 资源/Manifest 打包异常（产出坏APK），故关闭混淆。
+            // 安全性关键 - 私有签名(防伪造覆盖安装) + 无debuggable(防注入) 已到位。
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 用私有签名签名 release
+            signingConfig signingConfigs.release
+            // 本环境(PRoot/aarch64)资源优化后 Manifest/资源丢失, 关闭资源优化与lintVital
+            shrinkResources false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // 该工程仅使用原生 Android 框架 API，无第三方依赖
+}

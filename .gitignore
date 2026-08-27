@@ -1,0 +1,21 @@
+# Gradle / 构建产物
+.gradle/
+build/
+
+# 本机环境（含 SDK 路径，不提交）
+local.properties
+
+# 签名密钥与密码（绝不可提交！泄露=n签名可被伪造覆盖安装）
+keystore.properties
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.iml
+captures/
+
+# 系统
+.DS_Store
+# 编辑器备份
+*.bak

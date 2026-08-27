@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeViewTextChanged|typeViewClicked"
+    android:packageNames="com.tencent.mobileqq,com.tencent.mobileqqi,com.ss.android.ugc.aweme,com.ss.android.ugc.aweme.lite,com.smile.gifmaker,com.kuaishou.nebula,com.tencent.mm"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="50"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagDefault|flagIncludeNotImportantViews"
+    android:canRetrieveWindowContent="true"/>
