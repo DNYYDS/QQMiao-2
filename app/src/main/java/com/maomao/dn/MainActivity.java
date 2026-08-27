@@ -19,7 +19,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -151,6 +153,8 @@ public class MainActivity extends Activity {
 
     private View header() {
         // 方案A: 浅色大留白, 顶部居中猫图标 + 大标题 + 副标题, 无大色块
+        // 右上角叠加 ⋮ 菜单(检查更新 / 前往 GitHub 仓库)
+        FrameLayout wrap = new FrameLayout(this);
         LinearLayout h = new LinearLayout(this);
         h.setOrientation(LinearLayout.VERTICAL);
         h.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -163,7 +167,7 @@ public class MainActivity extends Activity {
         h.addView(mascot);
 
         TextView title = new TextView(this);
-        title.setText("喵喵助手");
+        title.setText("QQMiao 2");
         title.setTextSize(27.0f);
         title.setTextColor(C_TEXT);
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -177,7 +181,173 @@ public class MainActivity extends Activity {
         sub.setTextColor(C_TEXT_SUB);
         sub.setGravity(Gravity.CENTER);
         h.addView(sub);
-        return h;
+
+        wrap.addView(h);
+
+        // 右上角 ⋮ 按钮
+        TextView more = new TextView(this);
+        more.setText("⋮");
+        more.setTextSize(26.0f);
+        more.setTextColor(C_TEXT_SUB);
+        more.setGravity(Gravity.CENTER);
+        more.setPadding(dp(14), dp(6), dp(14), dp(6));
+        more.setClickable(true);
+        more.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMoreMenu(v);
+            }
+        });
+        FrameLayout.LayoutParams mlp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.RIGHT);
+        mlp.topMargin = dp(6);
+        mlp.rightMargin = dp(4);
+        more.setLayoutParams(mlp);
+        wrap.addView(more);
+
+        return wrap;
+    }
+
+    // 右上角 ⋮ 菜单
+    private void showMoreMenu(final View anchor) {
+        PopupMenu pm = new PopupMenu(this, anchor);
+        pm.getMenu().add(0, 1, 0, "检查更新");
+        pm.getMenu().add(0, 2, 0, "前往 GitHub 仓库");
+        pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(android.view.MenuItem item) {
+                int id = item.getItemId();
+                if (id == 1) {
+                    checkUpdate();
+                } else if (id == 2) {
+                    openRepo();
+                }
+                return true;
+            }
+        });
+        pm.show();
+    }
+
+    // 前往 GitHub 仓库
+    private void openRepo() {
+        try {
+            Intent it = new Intent(Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://github.com/DNYYDS/QQMiao-2"));
+            startActivity(it);
+        } catch (Exception e) {
+            shortToast("无法打开浏览器");
+        }
+    }
+
+    // 检查更新: 调用 GitHub Releases API
+    private void checkUpdate() {
+        final String repo = "DNYYDS/QQMiao-2";
+        shortToast("正在检查更新…");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final String latestTag = fetchLatestTag(repo);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showUpdateResult(latestTag);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    // 从 GitHub Releases API 获取最新 tag
+    private String fetchLatestTag(String repo) {
+        try {
+            java.net.URL url = new java.net.URL("https://api.github.com/repos/" + repo + "/releases/latest");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
+            conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
+            conn.setRequestMethod("GET");
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                return "";
+            }
+            java.io.InputStream is = conn.getInputStream();
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(is, "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) {
+                sb.append(line);
+            }
+            r.close();
+            conn.disconnect();
+            // 解析 tag_name
+            String body = sb.toString();
+            int i = body.indexOf("\"tag_name\"");
+            if (i < 0) return "";
+            int s = body.indexOf('"', i + 11);
+            int e = body.indexOf('"', s + 1);
+            return s >= 0 && e > s ? body.substring(s + 1, e) : "";
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
+    // 展示更新结果
+    private void showUpdateResult(String latestTag) {
+        String cur = "1.47";
+        try {
+            cur = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception ignored) {
+        }
+        if (latestTag == null || latestTag.isEmpty()) {
+            shortToast("检查更新失败，请检查网络");
+            return;
+        }
+        String latest = latestTag.replace("v", "").replace("V", "");
+        String curV = cur.replace("v", "").replace("V", "");
+        if (compareVersion(latest, curV) > 0) {
+            new AlertDialog.Builder(this)
+                    .setTitle("发现新版本")
+                    .setMessage("当前版本：" + curV + "\n最新版本：" + latest + "\n\n是否前往 GitHub 下载更新？")
+                    .setPositiveButton("前往下载", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            openRepo();
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } else {
+            shortToast("当前已是最新版本 (v" + curV + ")");
+        }
+    }
+
+    // 简单版本号比较: a>b 返回>0, 相等返回0, a<b 返回<0
+    private int compareVersion(String a, String b) {
+        if (a == null) a = "";
+        if (b == null) b = "";
+        String[] as = a.split("\\.");
+        String[] bs = b.split("\\.");
+        int n = Math.max(as.length, bs.length);
+        for (int i = 0; i < n; i++) {
+            int av = i < as.length ? parseNum(as[i]) : 0;
+            int bv = i < bs.length ? parseNum(bs[i]) : 0;
+            if (av != bv) return av - bv;
+        }
+        return 0;
+    }
+
+    private int parseNum(String s) {
+        try {
+            StringBuilder d = new StringBuilder();
+            for (char c : s.toCharArray()) {
+                if (Character.isDigit(c)) d.append(c);
+            }
+            return d.length() == 0 ? 0 : Integer.parseInt(d.toString());
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private View spacer() {

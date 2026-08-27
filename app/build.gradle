@@ -17,8 +17,8 @@ android {
         applicationId "com.maomao.dn"
         minSdk 23
         targetSdk 34
-        versionCode 47
-        versionName "1.47"
+        versionCode 48
+        versionName "1.48"
     }
 
     // release 签名使用私有 keystore（避免公开 debug keystore 被伪造覆盖安装）

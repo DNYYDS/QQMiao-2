@@ -8,6 +8,8 @@
     <!-- 唯一必需权限：无障碍服务（由 BIND_ACCESSIBILITY_SERVICE 保护，系统强制要求）。
          已移除未使用的 SYSTEM_ALERT_WINDOW（悬浮窗）和 Shizuku 权限，减少攻击面。 -->
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+    <!-- 检查更新: 访问 GitHub Releases API 获取最新版本号 -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="false"
