@@ -1,6 +1,6 @@
 # QQMiao 2
 
-基于 Android **无障碍服务（Accessibility Service）** 的 QQ 文本改写 / 润色工具。
+基于 Android **无障碍服务（Accessibility Service）** 的 QQ WX DY KS 文本改写 / 润色工具。
 
 ## 功能（v1.47）
 
