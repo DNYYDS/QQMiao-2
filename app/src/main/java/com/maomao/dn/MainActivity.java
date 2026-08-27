@@ -264,12 +264,15 @@ public class MainActivity extends Activity {
         try {
             java.net.URL url = new java.net.URL("https://api.github.com/repos/" + repo + "/releases/latest");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(8000);
-            conn.setReadTimeout(8000);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
             conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
+            // 设置 User-Agent，GitHub API 需要
+            conn.setRequestProperty("User-Agent", "QQMiao2");
             conn.setRequestMethod("GET");
             int code = conn.getResponseCode();
             if (code != 200) {
+                android.util.Log.d("CheckUpdate", "API返回码: " + code);
                 return "";
             }
             java.io.InputStream is = conn.getInputStream();
@@ -283,12 +286,14 @@ public class MainActivity extends Activity {
             conn.disconnect();
             // 解析 tag_name
             String body = sb.toString();
+            android.util.Log.d("CheckUpdate", "API响应: " + body);
             int i = body.indexOf("\"tag_name\"");
             if (i < 0) return "";
             int s = body.indexOf('"', i + 11);
             int e = body.indexOf('"', s + 1);
             return s >= 0 && e > s ? body.substring(s + 1, e) : "";
         } catch (Exception ex) {
+            android.util.Log.d("CheckUpdate", "异常: " + ex.getMessage());
             return "";
         }
     }
